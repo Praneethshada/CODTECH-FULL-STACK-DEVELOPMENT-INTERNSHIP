@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WeatherScope — Live Weather Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-wrapper">
+      <!-- ── HEADER ── -->
+      <header>
+        <div class="logo-block">
+          <p class="logo-eyebrow">Live Forecast Dashboard</p>
+          <h1 class="logo-title">WEATHER<span>SCOPE</span></h1>
+        </div>
+        <div class="header-meta">
+          <span id="live-time">--:--</span>
+          <span id="live-date">Loading date…</span>
+        </div>
+      </header>
+
+      <!-- ── SEARCH ── -->
+      <div class="search-container">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input
+            id="city-input"
+            type="text"
+            placeholder="Search city — e.g. Mumbai, London, Tokyo…"
+            autocomplete="off"
+            aria-label="City name"
+          />
+          <div
+            id="suggestions"
+            role="listbox"
+            aria-label="City suggestions"
+          ></div>
+        </div>
+        <button id="btn-search" class="btn-search" aria-label="Get weather">
+          GET WEATHER
+        </button>
+      </div>
+
+      <!-- ── STATUS MESSAGES ── -->
+      <div id="status-msg" role="status" aria-live="polite"></div>
+
+      <!-- ── DASHBOARD (populated by JS) ── -->
+      <div id="dashboard" aria-live="polite">
+        <!-- Current Weather -->
+        <div class="hero-card">
+          <div>
+            <p class="hero-location" id="d-location">—</p>
+            <div class="hero-temp" id="d-temp">—<sup>°C</sup></div>
+            <p class="hero-desc" id="d-desc">—</p>
+            <p class="hero-feels" id="d-feels">—</p>
+          </div>
+          <div class="hero-icon" id="d-icon" aria-hidden="true">—</div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card" data-accent="cyan">
+            <span class="stat-icon">💨</span>
+            <p class="stat-label">Wind Speed</p>
+            <p class="stat-value" id="d-wind">
+              —<span class="stat-unit">km/h</span>
+            </p>
+          </div>
+          <div class="stat-card" data-accent="default">
+            <span class="stat-icon">💧</span>
+            <p class="stat-label">Humidity</p>
+            <p class="stat-value" id="d-humidity">
+              —<span class="stat-unit">%</span>
+            </p>
+          </div>
+          <div class="stat-card" data-accent="amber">
+            <span class="stat-icon">🌡️</span>
+            <p class="stat-label">Pressure</p>
+            <p class="stat-value" id="d-pressure">
+              —<span class="stat-unit">hPa</span>
+            </p>
+          </div>
+          <div class="stat-card" data-accent="rose">
+            <span class="stat-icon">☔</span>
+            <p class="stat-label">Rain (1h)</p>
+            <p class="stat-value" id="d-rain">
+              —<span class="stat-unit">mm</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Hourly Forecast -->
+        <p class="section-title">Hourly</p>
+        <div class="hourly-scroll" id="d-hourly" role="list"></div>
+
+        <!-- 7-Day Forecast -->
+        <p class="section-title">7-Day Forecast</p>
+        <div class="forecast-list" id="d-daily" role="list"></div>
+      </div>
+
+      <!-- ── FOOTER ── -->
+      <footer>
+        <p>
+          Data provided by
+          <a href="https://open-meteo.com/" target="_blank" rel="noopener"
+            >Open-Meteo</a
+          >
+          &amp;
+          <a
+            href="https://nominatim.openstreetmap.org/"
+            target="_blank"
+            rel="noopener"
+            >Nominatim / OpenStreetMap</a
+          >
+          · Free &amp; Open APIs · No API key required
+        </p>
+        <p style="margin-top: 6px">
+          CodTech Internship Task 1 — API Integration
+        </p>
+      </footer>
+    </div>
+    <!-- /app-wrapper -->
+
+    <script src="script.js"></script>
+  </body>
+</html>
