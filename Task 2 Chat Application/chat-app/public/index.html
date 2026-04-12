@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ── Reset & Variables ─────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0f0f0f;
+        --surface: #171717;
+        --border: #2a2a2a;
+        --text: #e8e8e8;
+        --muted: #666;
+        --accent: #f0a500;
+        --danger: #e05252;
+        --success: #52c07a;
+        --system: #888;
+        --font-mono: "IBM Plex Mono", monospace;
+        --font-sans: "IBM Plex Sans", sans-serif;
+        --radius: 4px;
+      }
+
+      html,
+      body {
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      /* ── Join Screen ───────────────────────────────── */
+      #join-screen {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 1rem;
+      }
+
+      .join-box {
+        width: 100%;
+        max-width: 360px;
+        border: 1px solid var(--border);
+        padding: 2rem;
+        background: var(--surface);
+      }
+
+      .join-box h1 {
+        font-family: var(--font-mono);
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+        color: var(--accent);
+      }
+
+      .join-box p {
+        color: var(--muted);
+        font-size: 0.8rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .join-box label {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.4rem;
+      }
+
+      .join-box input {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 0.95rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: var(--radius);
+        outline: none;
+        transition: border-color 0.15s;
+      }
+
+      .join-box input:focus {
+        border-color: var(--accent);
+      }
+
+      .join-box button {
+        width: 100%;
+        margin-top: 1rem;
+        padding: 0.65rem;
+        background: var(--accent);
+        color: #000;
+        border: none;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: var(--radius);
+        transition: opacity 0.15s;
+      }
+
+      .join-box button:hover:not(:disabled) {
+        opacity: 0.85;
+      }
+      .join-box button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .join-error {
+        margin-top: 0.75rem;
+        font-size: 0.78rem;
+        color: var(--danger);
+        min-height: 1.2em;
+        font-family: var(--font-mono);
+      }
+
+      /* ── Chat Screen ───────────────────────────────── */
+      #chat-screen {
+        display: none;
+        height: 100vh;
+        flex-direction: column;
+      }
+
+      /* Header */
+      .chat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+        flex-shrink: 0;
+      }
+
+      .chat-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .chat-title {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      /* Connection status dot */
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--success);
+        flex-shrink: 0;
+        transition: background 0.3s;
+      }
+      .status-dot.disconnected {
+        background: var(--danger);
+      }
+      .status-dot.connecting {
+        background: var(--accent);
+        animation: pulse 1s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      .chat-meta {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--muted);
+      }
+
+      /* Layout: sidebar + messages */
+      .chat-body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 160px;
+        border-right: 1px solid var(--border);
+        background: var(--surface);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+
+      .sidebar-label {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: 0.75rem 0.75rem 0.4rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      #user-list {
+        list-style: none;
+        overflow-y: auto;
+        flex: 1;
+        padding: 0.5rem 0;
+      }
+
+      #user-list li {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        padding: 0.3rem 0.75rem;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Highlight current user */
+      #user-list li.you {
+        color: var(--accent);
+      }
+
+      #user-list li.you::after {
+        content: " (you)";
+        color: var(--muted);
+        font-size: 0.65rem;
+      }
+
+      /* Messages area */
+      .messages-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      #messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        scroll-behavior: smooth;
+      }
+
+      /* Scroll-to-bottom button — shown when user has scrolled up */
+      #scroll-btn {
+        display: none;
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        background: var(--accent);
+        color: #000;
+        border: none;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.35rem 0.65rem;
+        border-radius: var(--radius);
+        cursor: pointer;
+        letter-spacing: 0.06em;
+        opacity: 0.9;
+        z-index: 10;
+      }
+
+      /* Message bubbles */
+      .msg {
+        display: flex;
+        flex-direction: column;
+        max-width: 72%;
+      }
+
+      /* System messages (join/leave/server notices) */
+      .msg.system {
+        align-self: center;
+        max-width: 100%;
+      }
+
+      .msg.system .msg-text {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--system);
+        text-align: center;
+        padding: 0.15rem 0;
+        font-style: italic;
+      }
+
+      /* Own messages — right aligned */
+      .msg.own {
+        align-self: flex-end;
+      }
+
+      /* Others — left aligned */
+      .msg.other {
+        align-self: flex-start;
+      }
+
+      .msg-header {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        margin-bottom: 0.15rem;
+      }
+
+      .msg-username {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .msg.own .msg-username {
+        color: var(--accent);
+      }
+
+      .msg-time {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        color: var(--muted);
+      }
+
+      .msg-bubble {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        line-height: 1.55;
+        word-break: break-word;
+        white-space: pre-wrap; /* preserve intentional linebreaks */
+      }
+
+      .msg.own .msg-bubble {
+        background: #1e1a0f;
+        border-color: #3a3010;
+      }
+
+      /* Input area */
+      .chat-input-area {
+        border-top: 1px solid var(--border);
+        padding: 0.75rem 1rem;
+        background: var(--surface);
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-end;
+        flex-shrink: 0;
+      }
+
+      #msg-input {
+        flex: 1;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: var(--font-sans);
+        font-size: 0.875rem;
+        padding: 0.55rem 0.75rem;
+        border-radius: var(--radius);
+        outline: none;
+        resize: none;
+        max-height: 120px;
+        min-height: 38px;
+        transition: border-color 0.15s;
+        overflow-y: auto;
+      }
+
+      #msg-input:focus {
+        border-color: var(--accent);
+      }
+      #msg-input:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      #send-btn {
+        background: var(--accent);
+        color: #000;
+        border: none;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 0 1rem;
+        height: 38px;
+        border-radius: var(--radius);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: opacity 0.15s;
+        flex-shrink: 0;
+      }
+
+      #send-btn:hover:not(:disabled) {
+        opacity: 0.85;
+      }
+      #send-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .char-count {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        color: var(--muted);
+        text-align: right;
+        padding: 0.25rem 0 0;
+        min-height: 1em;
+      }
+      .char-count.warn {
+        color: var(--danger);
+      }
+
+      /* Input + char count wrapper */
+      .input-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Error toast */
+      #toast {
+        position: fixed;
+        bottom: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--danger);
+        color: #fff;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
+        z-index: 100;
+        white-space: nowrap;
+      }
+
+      #toast.visible {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* Responsive: hide sidebar on small screens */
+      @media (max-width: 480px) {
+        .sidebar {
+          display: none;
+        }
+        .msg {
+          max-width: 88%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── Join Screen ─────────────────────────────────── -->
+    <div id="join-screen">
+      <div class="join-box">
+        <h1>Chat</h1>
+        <p>Enter a username to join.</p>
+        <label for="username-input">Username</label>
+        <input
+          id="username-input"
+          type="text"
+          placeholder="e.g. alice_99"
+          maxlength="20"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <div class="join-error" id="join-error" aria-live="polite"></div>
+        <button id="join-btn">Join Chat</button>
+      </div>
+    </div>
+
+    <!-- ── Chat Screen ─────────────────────────────────── -->
+    <div id="chat-screen">
+      <header class="chat-header">
+        <div class="chat-header-left">
+          <div
+            class="status-dot connecting"
+            id="status-dot"
+            title="Connecting..."
+          ></div>
+          <span class="chat-title">Chat</span>
+        </div>
+        <span class="chat-meta" id="status-text">Connecting...</span>
+      </header>
+
+      <div class="chat-body">
+        <!-- Online users sidebar -->
+        <aside class="sidebar">
+          <div class="sidebar-label">Online</div>
+          <ul id="user-list"></ul>
+        </aside>
+
+        <!-- Messages + input -->
+        <div class="messages-wrapper">
+          <div
+            id="messages"
+            role="log"
+            aria-live="polite"
+            aria-label="Chat messages"
+          ></div>
+          <button id="scroll-btn" aria-label="Scroll to latest">
+            ↓ New messages
+          </button>
+          <div class="chat-input-area">
+            <div class="input-col">
+              <textarea
+                id="msg-input"
+                placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
+                rows="1"
+                maxlength="500"
+                disabled
+                aria-label="Message input"
+              ></textarea>
+              <div class="char-count" id="char-count"></div>
+            </div>
+            <button id="send-btn" disabled>Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error toast -->
+    <div id="toast" role="alert"></div>
+
+    <!-- Socket.io client (served automatically by Socket.io server) -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      // ─────────────────────────────────────────────
+      //  Client — Chat Application
+      //  Design: No frameworks, plain JS, clear state,
+      //  all edge cases handled before hitting the server
+      // ─────────────────────────────────────────────
+
+      const MAX_MESSAGE_LENGTH = 500; // must match server
+
+      // ── State ─────────────────────────────────────
+      let myUsername = null;
+      let isConnected = false;
+
+      // ── DOM Refs ──────────────────────────────────
+      const joinScreen = document.getElementById("join-screen");
+      const chatScreen = document.getElementById("chat-screen");
+      const usernameInput = document.getElementById("username-input");
+      const joinBtn = document.getElementById("join-btn");
+      const joinError = document.getElementById("join-error");
+      const messagesEl = document.getElementById("messages");
+      const msgInput = document.getElementById("msg-input");
+      const sendBtn = document.getElementById("send-btn");
+      const userListEl = document.getElementById("user-list");
+      const statusDot = document.getElementById("status-dot");
+      const statusText = document.getElementById("status-text");
+      const charCount = document.getElementById("char-count");
+      const scrollBtn = document.getElementById("scroll-btn");
+      const toast = document.getElementById("toast");
+
+      // ── Socket Setup ──────────────────────────────
+      // autoConnect: true (default) — socket tries to connect immediately.
+      // reconnection: built-in exponential back-off handles flaky networks.
+      const socket = io({ autoConnect: true });
+
+      // ── Connection Events ─────────────────────────
+      socket.on("connect", () => {
+        isConnected = true;
+        setStatus("connected");
+        // If we already have a username (reconnection), re-join automatically
+        if (myUsername) rejoin();
+      });
+
+      socket.on("disconnect", (reason) => {
+        isConnected = false;
+        setStatus("disconnected");
+        setInputEnabled(false);
+
+        // "io server disconnect" means the server deliberately kicked us —
+        // don't auto-reconnect in that case.
+        if (reason === "io server disconnect") {
+          socket.connect();
+        }
+        // All other reasons: Socket.io will auto-reconnect via built-in logic
+      });
+
+      socket.on("connect_error", () => {
+        setStatus("connecting");
+      });
+
+      // ── Join Logic ────────────────────────────────
+      function attemptJoin() {
+        const raw = usernameInput.value.trim();
+
+        // Client-side pre-validation (mirrors server, avoids a round-trip for obvious errors)
+        if (raw.length < 2) {
+          return showJoinError("Username must be at least 2 characters.");
+        }
+        if (raw.length > 20) {
+          return showJoinError("Username must be 20 characters or fewer.");
+        }
+        if (!/^[a-zA-Z0-9_-]+$/.test(raw)) {
+          return showJoinError("Only letters, numbers, _ and - are allowed.");
+        }
+
+        joinBtn.disabled = true;
+        showJoinError("");
+
+        socket.emit("join", raw, (res) => {
+          joinBtn.disabled = false;
+          if (!res.success) {
+            return showJoinError(res.reason);
+          }
+          myUsername = res.username;
+          enterChat();
+        });
+      }
+
+      function rejoin() {
+        // Called after a reconnection — server state is wiped, re-register
+        socket.emit("join", myUsername, (res) => {
+          if (res.success) {
+            setInputEnabled(true);
+          } else {
+            // Name was grabbed by someone else during downtime
+            showToast("Your username was taken. Please choose a new one.");
+            exitToJoin();
+          }
+        });
+      }
+
+      function enterChat() {
+        joinScreen.style.display = "none";
+        chatScreen.style.display = "flex";
+        setInputEnabled(true);
+        msgInput.focus();
+      }
+
+      function exitToJoin() {
+        chatScreen.style.display = "none";
+        joinScreen.style.display = "flex";
+        myUsername = null;
+        messagesEl.innerHTML = "";
+        userListEl.innerHTML = "";
+        usernameInput.value = "";
+        usernameInput.focus();
+      }
+
+      // ── Message Events ────────────────────────────
+      // Server sends full history on join
+      socket.on("history", (msgs) => {
+        messagesEl.innerHTML = "";
+        msgs.forEach(renderMessage);
+        scrollToBottom();
+      });
+
+      // New message from anyone
+      socket.on("message", (msg) => {
+        const wasAtBottom = isScrolledToBottom();
+        renderMessage(msg);
+        if (wasAtBottom) {
+          scrollToBottom();
+        } else {
+          // Show "new message" nudge
+          scrollBtn.style.display = "block";
+        }
+      });
+
+      // Updated user list
+      socket.on("user_list", (users) => {
+        userListEl.innerHTML = "";
+        users.forEach((u) => {
+          const li = document.createElement("li");
+          li.textContent = u;
+          if (u === myUsername) li.classList.add("you");
+          userListEl.appendChild(li);
+        });
+      });
+
+      // ── Render ────────────────────────────────────
+      function renderMessage(msg) {
+        const div = document.createElement("div");
+        div.classList.add("msg");
+
+        if (msg.type === "system") {
+          div.classList.add("system");
+          const p = document.createElement("div");
+          p.classList.add("msg-text");
+          // msg.text is already sanitized server-side; safe to set as innerHTML
+          // because only &lt; &gt; &amp; &quot; &#x27; entities are present
+          p.textContent = decodeHTML(msg.text);
+          div.appendChild(p);
+        } else {
+          const isOwn = msg.username === myUsername;
+          div.classList.add(isOwn ? "own" : "other");
+
+          const header = document.createElement("div");
+          header.classList.add("msg-header");
+
+          const uname = document.createElement("span");
+          uname.classList.add("msg-username");
+          uname.textContent = decodeHTML(msg.username);
+
+          const time = document.createElement("span");
+          time.classList.add("msg-time");
+          time.textContent = formatTime(msg.timestamp);
+
+          header.appendChild(uname);
+          header.appendChild(time);
+
+          const bubble = document.createElement("div");
+          bubble.classList.add("msg-bubble");
+          bubble.textContent = decodeHTML(msg.text); // textContent = XSS-safe, no innerHTML
+
+          div.appendChild(header);
+          div.appendChild(bubble);
+        }
+
+        messagesEl.appendChild(div);
+      }
+
+      /**
+       * Decode HTML entities from server-sanitized strings so they display
+       * correctly when set via textContent.
+       * e.g. "&lt;script&gt;" → "<script>"  (which textContent renders as literal text, safely)
+       */
+      function decodeHTML(str) {
+        const txt = document.createElement("textarea");
+        txt.innerHTML = str;
+        return txt.value;
+      }
+
+      // ── Send ──────────────────────────────────────
+      function sendMessage() {
+        const text = msgInput.value; // preserve intentional whitespace for trimming check only
+        const trimmed = text.trim();
+
+        if (!trimmed) {
+          msgInput.value = "";
+          autoResize();
+          return;
+        }
+
+        if (trimmed.length > MAX_MESSAGE_LENGTH) {
+          return showToast(
+            `Message too long. Max ${MAX_MESSAGE_LENGTH} chars.`,
+          );
+        }
+
+        if (!isConnected) {
+          return showToast("You're not connected. Waiting to reconnect...");
+        }
+
+        setInputEnabled(false);
+
+        socket.emit("message", trimmed, (res) => {
+          setInputEnabled(true);
+          msgInput.focus();
+          if (!res.success) {
+            showToast(res.reason);
+          } else {
+            msgInput.value = "";
+            charCount.textContent = "";
+            autoResize();
+          }
+        });
+      }
+
+      // ── Input UX ──────────────────────────────────
+      msgInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      msgInput.addEventListener("input", () => {
+        autoResize();
+        updateCharCount();
+      });
+
+      sendBtn.addEventListener("click", sendMessage);
+
+      function autoResize() {
+        msgInput.style.height = "auto";
+        msgInput.style.height = msgInput.scrollHeight + "px";
+      }
+
+      function updateCharCount() {
+        const len = msgInput.value.length;
+        if (len === 0) {
+          charCount.textContent = "";
+          charCount.classList.remove("warn");
+          return;
+        }
+        charCount.textContent = `${len} / ${MAX_MESSAGE_LENGTH}`;
+        charCount.classList.toggle("warn", len > MAX_MESSAGE_LENGTH * 0.9);
+      }
+
+      function setInputEnabled(enabled) {
+        msgInput.disabled = !enabled;
+        sendBtn.disabled = !enabled;
+      }
+
+      // ── Join UX ───────────────────────────────────
+      joinBtn.addEventListener("click", attemptJoin);
+
+      usernameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") attemptJoin();
+      });
+
+      function showJoinError(msg) {
+        joinError.textContent = msg;
+      }
+
+      // ── Status Indicator ──────────────────────────
+      function setStatus(state) {
+        statusDot.className = "status-dot " + state;
+        const labels = {
+          connected: "Connected",
+          disconnected: "Disconnected — reconnecting...",
+          connecting: "Connecting...",
+        };
+        statusText.textContent = labels[state] || "";
+        statusDot.title = labels[state] || "";
+      }
+
+      // ── Scroll helpers ────────────────────────────
+      function isScrolledToBottom() {
+        // "at bottom" = within 60px of the bottom (tolerant of sub-pixel differences)
+        return (
+          messagesEl.scrollHeight -
+            messagesEl.scrollTop -
+            messagesEl.clientHeight <
+          60
+        );
+      }
+
+      function scrollToBottom() {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        scrollBtn.style.display = "none";
+      }
+
+      messagesEl.addEventListener("scroll", () => {
+        if (isScrolledToBottom()) scrollBtn.style.display = "none";
+      });
+
+      scrollBtn.addEventListener("click", scrollToBottom);
+
+      // ── Toast notification ─────────────────────────
+      let toastTimer = null;
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add("visible");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("visible"), 3500);
+      }
+
+      // ── Utilities ─────────────────────────────────
+      function formatTime(ts) {
+        const d = new Date(ts);
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        return `${hh}:${mm}`;
+      }
+
+      // ── Initial state: set status on load ─────────
+      setStatus("connecting");
+    </script>
+  </body>
+</html>
