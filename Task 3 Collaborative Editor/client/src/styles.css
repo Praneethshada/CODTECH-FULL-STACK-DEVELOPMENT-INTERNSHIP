@@ -1,0 +1,142 @@
+:root {
+    color-scheme: light;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --text: #1f2a44;
+    --muted: #5b6782;
+    --primary: #0f6fff;
+    --primary-soft: #dce9ff;
+    --ok: #1c9a4d;
+    --warn: #b97a00;
+    --border: #d7dff0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: radial-gradient(circle at top, #ebf1ff 0%, var(--bg) 40%);
+    color: var(--text);
+}
+
+.page {
+    max-width: 980px;
+    margin: 32px auto;
+    padding: 0 16px 32px;
+}
+
+.hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.hero h1 {
+    margin: 0 0 8px;
+    font-size: 1.6rem;
+}
+
+.hero p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.controls {
+    margin-top: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+}
+
+.controls label {
+    font-weight: 600;
+}
+
+.controls-row {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+}
+
+input,
+button,
+textarea {
+    font: inherit;
+}
+
+input {
+    height: 40px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+button {
+    height: 40px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 10px;
+    padding: 0 14px;
+    cursor: pointer;
+}
+
+button.secondary {
+    background: var(--primary-soft);
+    color: var(--text);
+}
+
+.editor-wrap {
+    margin-top: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+}
+
+.editor-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.editor-toolbar p {
+    margin: 0;
+}
+
+.ok {
+    color: var(--ok);
+}
+
+.warn {
+    color: var(--warn);
+}
+
+.editor {
+    width: 100%;
+    min-height: 420px;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    line-height: 1.5;
+}
+
+@media (max-width: 800px) {
+    .controls-row {
+        grid-template-columns: 1fr;
+    }
+
+    button {
+        width: 100%;
+    }
+}

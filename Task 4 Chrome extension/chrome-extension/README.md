@@ -1,81 +1,79 @@
-# ⚡ ProductivityPulse — Chrome Extension
-### CODTECH Internship | Task 4 | Full Stack Development
+# ProductivityPulse Chrome Extension
 
-A professional **time tracking and productivity analytics** Chrome Extension that classifies websites, measures focused work time, and generates beautiful reports.
+CODTECH Internship Task 4 (Full Stack Development)
 
----
+This project is a Chrome extension that tracks website usage time and gives productivity reports. It classifies websites as productive, distracting, or neutral and shows analytics in both a popup and a full dashboard.
 
-## 📁 Project Structure
+## Project Structure
 
-```
+```text
 chrome-extension/
-│
-├── manifest.json          # Manifest V3 — extension config
-├── background.js          # Service worker — core tracking engine
-├── content.js             # Content script — visibility detection
-│
-├── utils/
-│   ├── classifier.js      # Domain → productive/unproductive/neutral
-│   └── storage.js         # chrome.storage.local read/write helpers
-│
-├── popup/
-│   ├── popup.html         # Mini dashboard shown on extension click
-│   └── popup.js           # Popup rendering logic
-│
-├── dashboard/
-│   ├── dashboard.html     # Full analytics dashboard (Options page)
-│   └── dashboard.js       # Chart.js visualisations + tables
-│
-├── icons/                 # Extension icons (16, 32, 48, 128px)
-│
-└── backend/               # Optional Node.js sync server
-    ├── server.js           # Express + SQLite REST API
-    └── package.json
+    manifest.json
+    background.js
+    content.js
+    utils/
+        classifier.js
+        storage.js
+    popup/
+        popup.html
+        popup.js
+    dashboard/
+        dashboard.html
+        dashboard.js
+    icons/
+    backend/
+        server.js
+        package.json
 ```
 
----
+## How to Install
 
-## 🚀 How to Install the Extension
+1. Open Chrome and go to `chrome://extensions`.
+2. Turn on Developer mode.
+3. Click `Load unpacked`.
+4. Select the `chrome-extension/` folder.
+5. The extension icon will appear in the Chrome toolbar.
 
-1. Open Chrome and navigate to `chrome://extensions`
-2. Enable **Developer mode** (toggle in top-right)
-3. Click **"Load unpacked"**
-4. Select this `chrome-extension/` folder
-5. The ⚡ ProductivityPulse icon will appear in your toolbar!
+If icons are missing, add these PNG files:
 
-> **Note:** You need PNG icon files at `icons/icon16.png`, `icons/icon32.png`, `icons/icon48.png`, `icons/icon128.png`. You can use any 16×16, 32×32, 48×48, and 128×128 PNG images, or generate them from the SVG below.
+1. `icons/icon16.png`
+2. `icons/icon32.png`
+3. `icons/icon48.png`
+4. `icons/icon128.png`
 
----
+## Main Features
 
-## 🎯 Features
+### Tracking
 
-### ✅ Core Tracking
-- **Automatic tab tracking** — starts/stops as you switch tabs
-- **Window focus detection** — pauses when Chrome loses focus
-- **Idle detection** — stops counting after 60s of no input (configurable)
-- **Periodic flush** — saves data every 10 seconds so nothing is lost
+1. Tracks active tab time automatically.
+2. Pauses tracking when Chrome is not focused.
+3. Stops counting when the user is idle.
+4. Saves data regularly so progress is not lost.
 
-### ✅ Smart Classification
-- **70+ known domains** pre-classified as productive or unproductive
-- **Custom domains** — add your own via the Settings page
-- Three categories: 🚀 Productive | 📵 Distracting | ⚖️ Neutral
-- Fuzzy matching handles subdomains automatically
+### Website Classification
 
-### ✅ Analytics Dashboard
-- **Today view** — hourly bar chart, donut chart, top sites table
-- **Weekly report** — 7-day grid, trend line, aggregate table
-- **All-time history** — searchable table of every tracked domain
-- **Productivity score** — calculated as productive/(productive+distracting)×100
+1. Includes many pre-classified domains.
+2. Supports custom domains from settings.
+3. Uses three categories: productive, distracting, and neutral.
+4. Handles subdomains with flexible matching.
 
-### ✅ Settings & Data
-- Set a **daily productive minutes goal** with progress bar
-- **Daily notification** at 9 PM with your summary
-- **Export** all data as JSON
-- **Clear** history at any time
+### Analytics
 
----
+1. Today view with charts and top websites.
+2. Weekly report view with trend data.
+3. All-time table with search support.
+4. Productivity score based on productive vs distracting time.
 
-## 🖥️ Optional Backend (for multi-device sync)
+### Settings and Data
+
+1. Set a daily productive time goal.
+2. Show a daily summary notification.
+3. Export saved data as JSON.
+4. Clear stored history when needed.
+
+## Optional Backend for Sync
+
+Use the backend only if you want to sync data across devices.
 
 ```bash
 cd backend
@@ -85,75 +83,35 @@ node server.js
 
 ### API Endpoints
 
-| Method | Endpoint         | Description                        |
-|--------|------------------|------------------------------------|
-| GET    | `/health`        | Health check                       |
-| POST   | `/register`      | Get a new userId (UUID)            |
-| POST   | `/sync`          | Sync extension data to server      |
-| GET    | `/report`        | Get data for a date range          |
-| GET    | `/weekly-report` | Get top productive/distracting sites |
+| Method | Endpoint         | Description                |
+| ------ | ---------------- | -------------------------- |
+| GET    | `/health`        | Health check               |
+| POST   | `/register`      | Create a user ID           |
+| POST   | `/sync`          | Sync extension data        |
+| GET    | `/report`        | Fetch report by date range |
+| GET    | `/weekly-report` | Fetch weekly top sites     |
 
----
+## Architecture Summary
 
-## 🏗️ Architecture
+1. `background.js` is the core tracker and event handler.
+2. `utils/classifier.js` decides site category.
+3. `utils/storage.js` handles local storage read/write.
+4. `popup/` shows quick daily stats.
+5. `dashboard/` shows detailed analytics and settings.
+6. `backend/` is optional and provides sync APIs.
 
-```
-┌─────────────────────────────────────────────────┐
-│                Chrome Extension                  │
-│                                                  │
-│  ┌──────────┐   tabs/windows    ┌─────────────┐ │
-│  │background│ ←── events ─────→ │ classifier  │ │
-│  │  worker  │                   │  (domains)  │ │
-│  │          │ ──── flush ──────→ │  storage    │ │
-│  └──────────┘                   └─────────────┘ │
-│       ↕ messages                      ↕         │
-│  ┌──────────┐               ┌──────────────────┐ │
-│  │  popup   │               │    dashboard     │ │
-│  │ (mini UI)│               │  (full charts)   │ │
-│  └──────────┘               └──────────────────┘ │
-└─────────────────────────────────────────────────┘
-          ↕ HTTP POST /sync (optional)
-┌─────────────────────────────────────────────────┐
-│          Node.js Backend (Express + SQLite)      │
-│  /register  /sync  /report  /weekly-report       │
-└─────────────────────────────────────────────────┘
-```
+## Tech Stack
 
-### Key Design Decisions
+| Layer         | Technology                             |
+| ------------- | -------------------------------------- |
+| Extension     | Chrome Manifest V3, Vanilla JavaScript |
+| Charts        | Chart.js                               |
+| Backend       | Node.js, Express                       |
+| Database      | SQLite                                 |
+| Local Storage | `chrome.storage.local`                 |
 
-| Decision | Reason |
-|---|---|
-| Manifest V3 | Required for new Chrome extensions; uses service workers |
-| ES Modules in background | Clean imports, tree-shakeable utilities |
-| `chrome.storage.local` | No server required; data persists across browser restarts |
-| Periodic alarm flush (10s) | Service workers can be killed; alarms reliably wake them |
-| Chart.js from CDN | Lightweight, MIT licensed, zero build step |
-| SQLite for backend | Zero database server setup, perfect for a single-server deploy |
+## Notes
 
----
-
-## 📝 Good Practices Used
-
-- **Separation of concerns**: classifier, storage, background, UI all separate files
-- **Comprehensive JSDoc comments** on every function
-- **Single Responsibility Principle**: each file does one thing
-- **Prepared statements** in SQLite (prevents SQL injection, better performance)
-- **Transactions** for bulk DB inserts
-- **Error handling** with try/catch everywhere async Chrome APIs are called
-- **No third-party trackers**: all data stays on your device unless you opt into the backend
-
----
-
-## 🏷️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Extension | Chrome Manifest V3, Vanilla JS (ES Modules) |
-| Charts | Chart.js 4.4 |
-| Backend | Node.js 18+, Express 4 |
-| Database | SQLite (via better-sqlite3) |
-| Storage | chrome.storage.local (offline-first) |
-
----
-
-*CODTECH Internship — Full Stack Development — Task 4*
+1. The extension works without a backend.
+2. All data stays in local storage unless sync is enabled.
+3. This project is designed to run without a frontend build step.
